@@ -55,6 +55,11 @@ add_library(utils ${UTILS_SRC})
 
 
 ###  Copying resources (shaders, images,...)  ###{{{
+set(copycmd create_symlink)
+if(WIN32)
+  set(copycmd copy_if_different)
+endif(WIN32)
+
 macro(copy_files GLOBPAT DESTINATION THETARGET)
   file(GLOB COPY_FILES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -64,7 +69,7 @@ macro(copy_files GLOBPAT DESTINATION THETARGET)
     get_filename_component(BASENAME ${FILENAME} NAME)
     add_custom_command(
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
-      COMMAND ${CMAKE_COMMAND} -E copy
+      COMMAND ${CMAKE_COMMAND} -E ${copycmd}
       "${CMAKE_CURRENT_SOURCE_DIR}/${FILENAME}"
       "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
       DEPENDS
