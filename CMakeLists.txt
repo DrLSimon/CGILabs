@@ -92,6 +92,7 @@ add_custom_target(resources ALL DEPENDS tgafiles objfiles glslfiles)
 
 ###  Sub projects  ###{{{
 # 2A
+add_subdirectory(fromScratch)
 add_subdirectory(Minimal)
 add_subdirectory(Textures)
 add_subdirectory(Shading)
