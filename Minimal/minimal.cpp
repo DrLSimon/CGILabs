@@ -198,96 +198,41 @@ void makeAPerFaceColoredCube(ensi::gl::Mesh& cube)/*{{{*/
     using ensi::gl::Vertex;
     cube.m_verts.clear();
     cube.m_tris.clear();
-    std::vector<glm::vec3> ps, ns, ts, bs;
-    std::vector<glm::vec2> uvs;
-    //make the front face (y=0)/*{{{*/
-    glm::vec3 p0(0,0,0);
-    glm::vec3 p1(1,0,0);
-    glm::vec3 p2(1,0,1);
-    glm::vec3 p3(0,0,1);
-    glm::vec3 n0(0,-1,0);
-    glm::vec3 n1(0,-1,0);
-    glm::vec3 n2(0,-1,0);
-    glm::vec3 n3(0,-1,0);  
-    glm::vec3 pp0(0,1,0);
-    glm::vec3 pp1(0,1,1);
-    glm::vec3 pp2(1,1,1);
-    glm::vec3 pp3(1,1,0);
-    glm::vec3 nn0(0,1,0);
-    glm::vec3 nn1(0,1,0);
-    glm::vec3 nn2(0,1,0);
-    glm::vec3 nn3(0,1,0);  /*}}}*/
-    // for each axis create two faces
-    for (int i = 0; i < 3; ++i)/*{{{*/
+    std::vector<glm::vec3> positions
     {
-        int ix=i, iy=(i+1)%3, iz=(i+2)%3;
-        // first face
-        ps.push_back(glm::vec3(p0[ix]-0.5,p0[iy]-0.5,p0[iz]-0.5));
-        ns.push_back(glm::vec3(n0[ix],n0[iy],n0[iz]));
-        uvs.push_back(glm::vec2(p0[0],p0[2]));
-
-        ps.push_back(glm::vec3(p1[ix]-0.5,p1[iy]-0.5,p1[iz]-0.5));
-        ns.push_back(glm::vec3(n1[ix],n1[iy],n1[iz]));
-        uvs.push_back(glm::vec2(p1[0],p1[2]));
-
-        ps.push_back(glm::vec3(p2[ix]-0.5,p2[iy]-0.5,p2[iz]-0.5));
-        ns.push_back(glm::vec3(n2[ix],n2[iy],n2[iz]));
-        uvs.push_back(glm::vec2(p2[0],p2[2]));
-
-
-        ps.push_back(glm::vec3(p0[ix]-0.5,p0[iy]-0.5,p0[iz]-0.5));
-        ns.push_back(glm::vec3(n0[ix],n0[iy],n0[iz]));
-        uvs.push_back(glm::vec2(p0[0],p0[2]));
-
-        ps.push_back(glm::vec3(p2[ix]-0.5,p2[iy]-0.5,p2[iz]-0.5));
-        ns.push_back(glm::vec3(n2[ix],n2[iy],n2[iz]));
-        uvs.push_back(glm::vec2(p2[0],p2[2]));
-
-        ps.push_back(glm::vec3(p3[ix]-0.5,p3[iy]-0.5,p3[iz]-0.5));
-        ns.push_back(glm::vec3(n3[ix],n3[iy],n3[iz]));
-        uvs.push_back(glm::vec2(p3[0],p3[2]));
-
-
-        // second face
-        ps.push_back(glm::vec3(pp0[ix]-0.5,pp0[iy]-0.5,pp0[iz]-0.5));
-        ns.push_back(glm::vec3(nn0[ix],nn0[iy],nn0[iz]));
-        uvs.push_back(glm::vec2(pp0[0],pp0[2]));
-
-        ps.push_back(glm::vec3(pp1[ix]-0.5,pp1[iy]-0.5,pp1[iz]-0.5));
-        ns.push_back(glm::vec3(nn1[ix],nn1[iy],nn1[iz]));
-        uvs.push_back(glm::vec2(pp1[0],pp1[2]));
-
-        ps.push_back(glm::vec3(pp2[ix]-0.5,pp2[iy]-0.5,pp2[iz]-0.5));
-        ns.push_back(glm::vec3(nn2[ix],nn2[iy],nn2[iz]));
-        uvs.push_back(glm::vec2(pp2[0],pp2[2]));
-
-
-        ps.push_back(glm::vec3(pp0[ix]-0.5,pp0[iy]-0.5,pp0[iz]-0.5));
-        ns.push_back(glm::vec3(nn0[ix],nn0[iy],nn0[iz]));
-        uvs.push_back(glm::vec2(pp0[0],pp0[2]));
-
-        ps.push_back(glm::vec3(pp2[ix]-0.5,pp2[iy]-0.5,pp2[iz]-0.5));
-        ns.push_back(glm::vec3(nn2[ix],nn2[iy],nn2[iz]));
-        uvs.push_back(glm::vec2(pp2[0],pp2[2]));
-
-        ps.push_back(glm::vec3(pp3[ix]-0.5,pp3[iy]-0.5,pp3[iz]-0.5));
-        ns.push_back(glm::vec3(nn3[ix],nn3[iy],nn3[iz]));
-        uvs.push_back(glm::vec2(pp3[0],pp3[2]));
-
-    }/*}}}*/
-    computeTangentBasis(ps, uvs, ns, ts, bs);
-    std::vector<glm::vec3> ops, ons, ots, obs;
-    std::vector<glm::vec2> ouvs;
-    indexVBO_TBN(ps, uvs, ns, ts, bs, cube.m_tris, ops, ouvs, ons, ots, obs);
-    const glm::vec4 colors[]={glm::vec4(1,0,0,1), glm::vec4(1,1,0,1), glm::vec4(0,1,0,1), glm::vec4(0,1,1,1), glm::vec4(0,0,1,1), glm::vec4(1,0,1,1)};
-    for (unsigned int i = 0; i < ops.size(); ++i)
+        glm::vec3(0,0,0), glm::vec3(1,0,0), glm::vec3(1,1,0), glm::vec3(0,1,0),
+        glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,1), glm::vec3(0,1,1),
+        glm::vec3(0,0,0), glm::vec3(0,1,0), glm::vec3(0,1,1), glm::vec3(0,0,1),
+        glm::vec3(1,0,0), glm::vec3(1,1,0), glm::vec3(1,1,1), glm::vec3(1,0,1),
+        glm::vec3(0,0,0), glm::vec3(1,0,0), glm::vec3(1,0,1), glm::vec3(0,0,1),
+        glm::vec3(0,1,0), glm::vec3(1,1,0), glm::vec3(1,1,1), glm::vec3(0,1,1)
+    };
+    std::vector<glm::vec4> colors=
     {
-        Vertex v(ops[i], ons[i], ouvs[i], colors[i/4], ots[i]);
-        cube.m_verts.push_back(v);
+        glm::vec4(1,0,0,1),glm::vec4(1,0,0,1),glm::vec4(1,0,0,1),glm::vec4(1,0,0,1),
+        glm::vec4(1,1,0,1),glm::vec4(1,1,0,1),glm::vec4(1,1,0,1),glm::vec4(1,1,0,1),
+        glm::vec4(0,1,0,1),glm::vec4(0,1,0,1),glm::vec4(0,1,0,1),glm::vec4(0,1,0,1),
+        glm::vec4(0,1,1,1),glm::vec4(0,1,1,1),glm::vec4(0,1,1,1),glm::vec4(0,1,1,1),
+        glm::vec4(0,0,1,1),glm::vec4(0,0,1,1),glm::vec4(0,0,1,1),glm::vec4(0,0,1,1),
+        glm::vec4(1,0,1,1),glm::vec4(1,0,1,1),glm::vec4(1,0,1,1),glm::vec4(1,0,1,1),
+    };
+    std::vector<GLuint> ibo=
+    {
+        0,2,1, 0,3,2,
+        4,5,6, 4,6,7,
+        8,10,9, 8,11,10,
+        12,13,14, 12,14,15,
+        16,17,18, 16,18,19,
+        20,22,21, 20,23,22
+    };
+    for (int i = 0; i < 24; ++i)
+    {
+        cube.m_verts.push_back(Vertex(positions[i], glm::vec3(), glm::vec2(), colors[i]));
     }
-    cube.computeBSphere();
+    cube.m_tris=ibo;
 }
 /*}}}*/
+
 
 inline glm::vec3 torusPoint(double theta, double phi, double R, double r)/*{{{*/
 {
