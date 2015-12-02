@@ -465,6 +465,9 @@ namespace ensi
         };
         /*}}}*/
 
+        /** @class Camera {{{
+         *  @brief Simple class to model Cameras
+         */
         class Camera
         {
         public:
@@ -485,12 +488,15 @@ namespace ensi
             }/*}}}*/                                               
         
         public:/*{{{*/
+            //!fixme: window does not seem really relevant here (and probably
+            //resize should be externalized)
             GLFWwindow* window;
             glm::mat4 worldViewMatrix;
             glm::mat4 projectionMatrix;
             glm::vec4 viewport;
             glm::vec2 screenToPixel;/*}}}*/
         };
+        /*}}}*/
 
         /** @class CameraHandler {{{
          *  @brief CameraHandler control
@@ -517,10 +523,10 @@ namespace ensi
                 wv=getViewMatrix();
             }/*}}}*/
 
-            void resize(int width, int height)
+            void resize(int width, int height)/*{{{*/
             {
                 camera.resize(width, height, near, far);
-            }
+            }/*}}}*/
         
         public:/*{{{*/
             glm::mat4 rotation;
@@ -749,6 +755,7 @@ namespace ensi
                     glm::vec3 axis(0,1,0);
                     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
                         axis=glm::vec3(0,0,1);
+                    axis=glm::mat3(cameraHandler.rotation)*axis;
                     glm::vec3 movement=4*delta_rotate*axis;
                     cameraHandler.position+=movement;
                 }
@@ -757,31 +764,33 @@ namespace ensi
                     glm::vec3 axis(0,1,0);
                     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
                         axis=glm::vec3(0,0,1);
+                    axis=glm::mat3(cameraHandler.rotation)*axis;
                     glm::vec3 movement=4*delta_rotate*axis;
                     cameraHandler.position-=movement;
                 }
                 if (glfwGetKey(window, 'D') == GLFW_PRESS)
                 {
                     glm::vec3 axis(1,0,0);
+                    axis=glm::mat3(cameraHandler.rotation)*axis;
                     glm::vec3 movement=4*delta_rotate*axis;
                     cameraHandler.position+=movement;
                 }
                 if (glfwGetKey(window, 'A') == GLFW_PRESS)
                 {
                     glm::vec3 axis(1,0,0);
+                    axis=glm::mat3(cameraHandler.rotation)*axis;
                     glm::vec3 movement=4*delta_rotate*axis;
                     cameraHandler.position-=movement;
                 }
                 if(controlCam){
-                    glm::mat3 rot3(glm::transpose(cameraHandler.rotation));
                     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
                     {
-                        glm::vec3 axis=rot3*glm::vec3(0,0,1);
+                        glm::vec3 axis=glm::vec3(0,0,1);
                         cameraHandler.rotation=glm::rotate(cameraHandler.rotation, delta_rotate, axis);
                     }
                     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
                     {
-                        glm::vec3 axis=rot3*glm::vec3(0,0,1);
+                        glm::vec3 axis=glm::vec3(0,0,1);
                         cameraHandler.rotation=glm::rotate(cameraHandler.rotation, -delta_rotate, axis);
                     }
                     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -789,7 +798,6 @@ namespace ensi
                         glm::vec3 axis(1,0,0);
                         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
                             axis=glm::vec3(0,1,0);
-                        axis=rot3*axis;
                         cameraHandler.rotation=glm::rotate(cameraHandler.rotation, delta_rotate, axis);
                     }
                     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
@@ -797,7 +805,6 @@ namespace ensi
                         glm::vec3 axis(1,0,0);
                         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
                             axis=glm::vec3(0,1,0);
-                        axis=rot3*axis;
                         cameraHandler.rotation=glm::rotate(cameraHandler.rotation, -delta_rotate, axis);
                     }
                 }
@@ -903,6 +910,14 @@ namespace ensi
          */
         class Renderer
         {
+          //!fixme: should I implement a Visitor pattern here:
+          //the Renderer is the visitor and the Scene/SceneObject/Camera are the visited
+          //The scene accept method implement the traversal over the
+          //SceneObjects
+          //In that way, a single object can be rendered, or the whole scene.
+          //Also other visitors can be implemented (e.g a ray tracing renderer
+          //or even the Picker class could be one)
+          //see https://en.wikipedia.org/wiki/Visitor_pattern#Java_example
         public:
             Renderer ();
 
