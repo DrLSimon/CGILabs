@@ -141,7 +141,7 @@ int make_resources(void)/*{{{*/
     mat.uniforms["diffuse"]=glm::vec3(1,1,1);
     mat.uniforms["specular"]=glm::vec3(0.7,0.7,0.7);
     mat.uniforms["shininess"]=500.;
-    mat.uniforms["clipped"]=(unsigned int) 0;
+    mat.uniforms["clipped"]=(int) 0;
     mat.program=prog;
     scene.materials["reflection"]=mat;
     // Create the scene/*{{{*/

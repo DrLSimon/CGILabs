@@ -246,6 +246,14 @@ namespace ensi
                 }
                 try
                 {
+                    setUniform(name, boost::any_cast<int>(val));
+                    return;
+                }
+                catch(const boost::bad_any_cast &)
+                {
+                }
+                try
+                {
                     setUniform(name, boost::any_cast<float>(val));
                     return;
                 }
