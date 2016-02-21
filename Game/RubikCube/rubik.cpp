@@ -7,6 +7,11 @@ RubikGame::RubikGame ():controls(1)
     initGLContext();
     menuState = std::shared_ptr<IGameState>(new MenuState(*this));
     menu();
+    int width;
+    int height;
+    GLFWwindow* window=controls.getWindow();
+    glfwGetFramebufferSize(window, &width, &height);
+    controls.cameraHandler.position=glm::vec3(0,-5,0);
 }
 
 RubikGame::~RubikGame ()
@@ -94,7 +99,7 @@ void RubikGame::initGLFW()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_FOCUSED, GL_TRUE);
-    GLFWwindow* window=glfwCreateWindow(window_width, window_height, "A simple Game", NULL, NULL);
+    GLFWwindow* window=glfwCreateWindow(window_width, window_height, "A simple OpenGL Rubik's Cube", NULL, NULL);
     controls.setWindow(window);
     if (!window)
     {
@@ -506,7 +511,7 @@ void PlayingState::moveCallback(GLFWwindow* window, double xx, double yy)
     }
     if(playingState==ROTATING_SLICE)
     {
-        angle = (glm::dot(deltaPos, biaxis)) * 2*glm::pi<float>();
+        angle = (glm::dot(deltaPos, biaxis)) * 10*glm::pi<float>();
         if(pickedface=="l" or pickedface=="n" or pickedface=="b")
             angle=-angle;
     }
