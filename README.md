@@ -70,7 +70,9 @@ If the Picking functionalities are implemented, every object in the scene can be
 in wireframe. As an exception, in the *Vshadow* lab, the object will be selected as the shadow caster. 
 
 # Author and License
-The MIT License (MIT)
+Part of this source code has been borrowed and modified from the nice OpenGl Tutorials of [Joe Groff](http://duriansoftware.com/joe/An-intro-to-modern-OpenGL.-Table-of-Contents.html). The corresponding code is in the *utils* directory and was originally published under a "Do whatever you like with this source code" kind of license. 
+
+The rest of the code is published under the MIT License (MIT)
 
 Copyright (c) 2016 Loic Simon
 
