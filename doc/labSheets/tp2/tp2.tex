@@ -1,0 +1,113 @@
+\documentclass{article}
+\usepackage[linktocpage=true]{hyperref}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc} 
+\usepackage[utf8]{inputenc}
+\usepackage{subfigure}
+\usepackage{color}
+\def\todo#1{}%{{\color{red} #1}}
+\def\fixme#1{}%{{\color{green} #1}}
+
+\author{Loïc Simon}
+\title{BSI TP2: Application de textures}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% Objectif<<<
+L'objectif de ce TP est de mettre en place les techniques basiques de placage de
+texture, à savoir
+\begin{itemize}
+\item le chargement d'une texture dans le GPU (à partir d'un fichier TGA),
+\item les directives de coloration dans le fragment shader
+\item la définition de coordonnées UV (dans le VAO),
+\item le filtrage (magnification et minification),
+\item le mipmapping
+\end{itemize}
+%>>>
+
+\section{Exercices}
+{\bf NB:} Pour l'exercice 1, vous devrez modifier le fichier
+\verb|utils/textures.cpp|, et pour les suivant le fichier
+\verb|Textures/textures.cpp|. Il s'agit bien de deux fichiers différents. Vous
+aurez aussi à modifier le fragment shader \verb|texture.f.glsl|.         
+
+\subsection{Exercice 1: Chargement d'une texture}%<<<
+Dans le fichier \verb|utils/textures.cpp| remplir le code de la fonction \verb|loadTGATexture| pour effectuer le
+chargement d'un fichier de texture dans le CPU puis la stocker dans le GPU.
+Vous utiliserez notamment les routines \verb|read_tga| pour charger la texture
+dans la mémoire CPU puis \verb|glTexImage2D|, pour la stocker dans le GPU.
+
+Utiliser la routine \verb|glTexParameteri| pour contrôler les paramètres de
+wrapping (extension de la texture en dehors de son domaine naturel $[0,1]$) et
+de filtrage.
+
+Dans cet exercice, vous aurez aussi besoin d'éditer le fichier
+\verb|texture.f.glsl| pour mettre en place la coloration par texture dans le
+fragment shader. Vous devrez utiliser la routine GLSL \verb|texture|.
+
+Lorsque ces deux étapes seront réalisées, la scène sera uniformément texturée
+par un damier. Vous devrez alors éditer le fichier \verb|Textures/textures.cpp|
+dans la fonction \verb|draw()| pour associer une texture de dé a certains objets
+de la scène. Pour cela vous devrez associer la bonne texture a l'objet uniform
+de te type sampler2D du programme de shader utilisé pour texturer.
+
+\begin{itemize}
+  \item[Q1.] Expliquez succinctement et avec vos propres mots le rôles des
+  paramètres de la fonction \verb|glTexImage2D|.
+  \item[Q2.] Essayez plusieurs paramètres de wrapping (extrapolation) et de
+  filtrage (interpolation) différents,
+  et expliquez leurs effets. Illustrez par des captures d'écran.
+\end{itemize}
+%>>>
+
+\subsection{Exercice 2: Coordonnées uv}%<<<
+
+Ouvrez le fichier \verb|dice_texture.tga|, et observez le. Remplacez les valeurs
+du buffer \verb|correct_uv_buffer_data| pour que chacun des numéros se plaque
+correctement sur une face du cube. Vous pourrez aussi télécharger d'autres
+textures qui vous plaisent et les plaquer sur le cube. Pour cela vous les
+convertirez en \verb|tga| en utilisant la commande suivante:
+
+\begin{verbatim}
+ convert input.jpg -type TrueColor output.tga 
+\end{verbatim}
+
+\begin{itemize}
+  \item[Q3.] Commentez sur la difficulté pour obtenir un mapping cohérent pour
+  différentes textures.
+\end{itemize}
+%>>>
+
+\subsection{Exercice 3 et 4: Mip-mapping et filtrage anisotrope}%<<<
+
+Dans la fonction \verb|drawPlane|, gênerez des mipmaps et activez les. Ensuite,
+mettez en place un filtrage anisotrope.
+
+\begin{itemize}
+  \item[Q4.] Expliquez la différence entre la magnification et la minification
+  (dans le contexte du placage de textures).
+  \item[Q5.] Expliquez quels défauts visuels le mipmapping cherche a éliminer.
+  Expliquez le principe de fonctionnement de cette technique, et notamment
+  pourquoi elle permet d'éliminer les effets indésirables susmentionnés.
+  \item[Q6.] De même, expliquez le rôle et le principe du filtrage anisotrope.
+\end{itemize}
+%>>>
+
+\subsection{Exercice 5: Fragment shader}%<<<
+
+Changez la définition de fragColor, pour implementer des rendus originaux
+(par exemple animés).
+Vous pourrez utiliser la texture, la couleur, et toutes autres entrées (\verb|in| ou
+\verb|uniform|) que vous aurez passées au shader.
+
+
+\begin{itemize}
+  \item[Q7.] Décrivez ce que vous avez entrepris ici.
+\end{itemize}
+%>>>
+
+\end{document}
+
+% vim: fileencoding=utf-8 spelllang=fr:

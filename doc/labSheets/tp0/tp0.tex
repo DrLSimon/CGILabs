@@ -1,0 +1,186 @@
+\documentclass{article}%<<<
+\usepackage[linktocpage=true]{hyperref}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc} 
+\usepackage[latin1]{inputenc}
+\usepackage{subfigure}
+\usepackage[usenames,dvipsnames]{xcolor}
+\def\todo#1{}%{{\color{red} #1}}
+\def\fixme#1{}%{{\color{green} #1}}
+\usepackage{fancyvrb}
+\usepackage{verbdef}
+\fvset{frame=single,framesep=1mm,fontfamily=courier,fontsize=\scriptsize,numbers=left,framerule=.3mm,numbersep=1mm,commandchars=\\\{\}}
+\verbdef{\mytilde}{\~}%>>>
+
+%Title<<<
+\author{Loïc Simon}
+\title{BSI TP0: Exemple minimal OpenGL}
+\date{\today}
+
+\begin{document}
+\maketitle%>>>
+
+% Objectif<<<
+L'objectif de ce TP est d'appréhender les bases de l'API d'OpenGL moderne pour
+être capable d'initier des rendus 3D. Dans ce TP et les suivants nous
+utiliserons
+la librairie GLFW pour créer un contexte OpenGL Core Profile et gérer les
+interactions utilisateur.
+%>>>
+
+\section{Instructions préliminaires}%<<<
+\subsection{Installation locale de GLFW et autres}%<<<
+Pour vous faire gagnez du temps et de l'espace disque, GLFW et d'autres
+librairies sont  déjà installées
+dans un dossier commun. Pour que leur installation soit effective pour vous, vous
+devez toutefois effectuer les instructions suivantes:
+\begin{Verbatim}
+cd $HOME
+ln -s /home/public/simonl/Synthese/local_install .
+\end{Verbatim}
+%>>>
+
+% Récupération du code et premiers tests<<<
+\subsection{Récupération du code et premiers tests}
+Pour réaliser les exercices suivants, vous devez cloner le répertoire git mis a
+disposition par votre enseignant:
+\begin{Verbatim}
+  cd pathtoworkdir  \textcolor{OliveGreen}{# à adapter (par exemple ${HOME}/Bureau/TPSI)}
+  git clone http://www.ecole.ensicaen.fr/{\mytilde}simonl/gits/GLLabs.git/
+  cd GLLabs
+  mkdir build
+  cd build
+  cmake ..
+  make
+\end{Verbatim}
+
+Une fois la compilation terminée, vous disposez d'un exécutable que vous pouvez tester:
+\begin{Verbatim}
+  ./fromScratch/myOwnOpenGLProg
+\end{Verbatim}
+
+Dans ce TP vous travaillerez uniquement sur le  fichier 
+\begin{center}
+\verb|fromScratch/myOwnOpenGLProg.cpp|.
+\end{center}
+Dans son état original, l'exécutable créé, affiche un message d'encouragement
+sur la console.
+%>>>
+
+%Structure du répertoire<<<
+\subsection{Structure du répertoire}
+
+Le répertoire est constitué de plusieurs dossiers ayant chacun leur utilité:
+\begin{itemize}
+\item \verb|resources| est destiné a stocker les ressources de type GLSL,
+textures, maillages.
+\item \verb|include| contient un unique header \verb|lightGlAPI.hpp| qui implémente l'API de la
+  sur-couche d'OpenGL utilisée dans les TPs suivants (inutile ici).
+\item \verb|utils| contient des routines de plus bas niveau, utilisées dans l'API
+précédente. Ces fonctionnalités proviennent pour la plupart du tutoriel:
+\url{http://www.opengl-tutorial.org/}. Ces routines ne seront normalement pas
+utilisées directement.
+\item \verb|fromScratch| contient le code nécessaire pour ce premier TP. D'autres
+répertoire du même type seront ajoutés pour les autres TPs.
+\end{itemize}
+%>>>
+
+%Gestion de git<<<
+\subsection{Gestion de git}
+
+Git est un outil de suivi de version. Si vous voulez éviter tout souci, il vous
+faut indexer votre travail régulièrement. Pour ce faire, vous pourrez utiliser
+la commande:
+\begin{Verbatim}
+  git commit -am "A nice log message" \textcolor{OliveGreen}{# Adapter le message en conséquence.}
+\end{Verbatim}
+
+De plus, Git permet de partager son travail en créant des répertoires publics.
+Pour les besoins du chargé de TP, vous allez créer un tel répertoire et le
+maintenir à jour avec votre répertoire local de travail.
+
+\begin{Verbatim}
+  \textcolor{OliveGreen}{## Create the public repository}
+  cd ~/public_html
+  mkdir gits
+  git clone --bare pathtoworkdir gits/GLLabs.git
+  \textcolor{OliveGreen}{## Tricky handling of refs updates for http}
+  cd gits/GLLabs.git/hooks
+  git update-server-info
+  mv post-update.sample post-update
+  chmod 700 post-update
+  \textcolor{OliveGreen}{## test}
+  cd /tmp
+  git clone  http://www.ecole.ensicaen.fr/~YOURLOGIN/gits/GLLabs.git \textcolor{OliveGreen}{# Adapt YOURLOGIN}
+  \textcolor{OliveGreen}{## Verify that /tmp/GLLabs is uptodate}
+\end{Verbatim}
+
+Enfin pour maintenir votre répertoire public synchrone avec votre répertoire de
+travail vous utiliserez la séquence suivante:
+
+\begin{Verbatim}
+  cd pathtoworkdir
+  \textcolor{OliveGreen}{## Give a nice nickname to your public repo (only once)}
+  git remote add mypublic ~/public_html/gits/GLLabs.git
+  \textcolor{OliveGreen}{## Make sure everything was commited}
+  git commit -am "A nice log message" 
+  \textcolor{OliveGreen}{## Push new stuff to the server}
+  git push mypublic master:master
+  \textcolor{OliveGreen}{## test}
+  cd /tmp/GLLabs
+  git pull 
+  \textcolor{OliveGreen}{## Verify that /tmp/GLLabs is uptodate}
+\end{Verbatim}
+
+%>>>
+
+% Utilisateurs de QTcreator<<<
+\subsection{Utilisateurs de QTcreator}
+
+Pour les utilisateurs de QTcreator, il faut en premier lieu ouvrir le fichier
+\verb|CMakeLists.txt| situé a la racine de votre dossier de travail. Suivez
+ensuite les instructions proposées.
+
+De plus pour que les ressources (fichier GLSL, textures) soient bien accessible
+lors de l'exécution du programme, il est nécessaire de configurer le chemin a
+partir duquel l'exécutable sera lancer. Ce paramètre est accessible a partir de
+l'onglet \verb|Projects| (sur le panneau gauche). Choisissez ensuite
+\verb|Builds&Run/Run/Working directory|.
+
+{\bf Attention:} certaines versions de QTcreator sont bugguées et nécessitent d'effacer le
+fichier de configuration CMakeLists.txt.user avant chaque réouverture du projet.
+Ce fichier sera donc généré à nouveau. 
+%>>>
+%>>>
+
+
+\section{Exercice}%<<<
+
+Pour ce TP, vous devez implementer l'intégralité d'une application openGL+GLFW,
+permettant dans un premier temps d'afficher un triangle.
+
+Pour ce faire, vous devrez suivre les instructions fournies lors des premières
+séances de cours. Vous pouvez évidemment utiliser toute documentation en ligne
+supplémentaire, notamment:
+\begin{itemize}
+\item La documentation de glfw, glm, ...
+\item Les tutoriaux pointés par la page foad du cours.
+\end{itemize}
+
+D'un point de vue pratique, vous devrez compléter le fichier
+\verb|myOwnOpenGLProg.cpp| et la paire de fichiers GLSL,
+ \verb|myOwnGLSLProg.v.glsl| et \verb|myOwnGLSLProg.f.glsl|.
+%>>>
+
+
+\section{Compte-rendu du TP}%<<<
+
+Ce TP vise a vous donner une opportunité d'implémenter une application simple
+mais {\bf complete}. Il n'y a pas de retour attendu autre que l'expression
+palpable d'une satisfaction extrême sur vos visages. Merci de laisser paraître
+votre enthousiasme!
+%>>>
+
+\end{document}
+
+% vim: spelllang=fr foldmethod=marker:
