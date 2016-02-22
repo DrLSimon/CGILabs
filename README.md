@@ -13,18 +13,18 @@ introducing to the basics of OpenGL. The slides are available here:
 * *Shading* : a gap fill project on classical illumination shaders (Lambert and Phong) as well as Normal Mapping
 * *Mirror*  : a gap fill project on planar mirror (using the stencil buffer)
 * *VShadow* : a gap fill project on Shadow Volumes (using the stencil buffer)
+* *Picking* : a gap fill picking functionalities in the [include/lightGlAPI.hpp](include/lightGlAPI.hpp)[-cpp](include/lightGlAPI.cpp)' files
 * *Game/RubikCube* : a simple Rubik's cube game, meant as an example for the final project.
 
 # Structure of the labs
-A part from the *fromScratch* tutorial which is a standalone lab, and the Rubik's cube, all other labs are structured identically. Each lab is decomposed into a set
+A part from the *fromScratch* tutorial which is a standalone lab, and the Rubik's cube, all other labs are "starter code" and are structured identically. Each lab is decomposed into a set
 of exercises, clearly marked out thanks to c++ comments of the form:
 ```
 /* !todo exercise 1: Short instruction {{{
  * A longer (optional) paragraph describing the exercices in more details.
  *}}}*/
 ```
-Besides, most of these exercise blocks are placed in *if* statements bound to a global variable state used to switch between the 
-different exercises at run type (by typing 'E').
+Besides, most of these exercise blocks are placed in *if* statements bound to a global variable state used to switch between the different exercises at run type (by typing 'E'). All the labs rely on the Lab API implemented in [include/lightGlApi.hpp](include/lightGlApi.hpp) and [include/lightGlApi.cpp](include/lightGlApi.cpp). This API is (but barely) documented in [doc/lightGlAPI.pdf](doc/lightGlAPI.pdf).
 
 # Requirements
 The project relies on the following dependencies
