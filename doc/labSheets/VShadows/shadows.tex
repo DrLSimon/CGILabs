@@ -1,0 +1,139 @@
+\documentclass{article}
+\usepackage[linktocpage=true]{hyperref}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc} 
+\usepackage[latin1]{inputenc}
+\usepackage{subfigure}
+\usepackage{color}
+\def\todo#1{}%{{\color{red} #1}}
+\def\fixme#1{}%{{\color{green} #1}}
+
+\author{Loïc Simon}
+\title{SIRV TP4: Shadow Volume}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+L'objectif de ce TP est de comprendre  une technique générique pour créer des ombres portées de grande qualité et de l'implanter via l'API OpenGL. Il s'agit de la technique dite de ``shadow volume'' ou encore de ``stencil shadow''. En accompagnement de cet énoncé, vous trouverez un document très didactique expliquant les étapes clés de cette technique. C'est le fichier \verb|volume_shadows_tutorial_nuclear.pdf|. Étant donné la clarté de ce document, on se contentera ici dans la plupart des cas de donner les directives pour les différents exercices. Vous pouvez aussi regarder l'article dédié sur wikipedia \url{http://en.wikipedia.org/wiki/Shadow_volume}.
+
+
+Dans ce TP vous travaillerez uniquement sur le  fichier \verb|shadow.cpp|. Dans son état original, l'exécutable créé, affiche une scène composée d'un tore, un cube, un mur, un plancher et un miroir plan. Il est possible de déplacer la caméra ou la direction de la lumière avec la souris:
+\begin{itemize}
+\item {\bf bouton gauche:} déplacement le long des longitudes
+\item {\bf bouton droit:} déplacement le long des latitudes
+\item {\bf bouton milieu:} déplacement radial (uniquement pour la caméra
+\end{itemize}
+Vous pouvez décider de contrôler soit la caméra en appuyant sur la touche 'c' ou la lumière via la touche 'l'.
+Utilisez cette fonctionnalité pour observer la scène.
+
+D'autres part, dans le code, des sections sont réservées pour les réponses aux exercices. Elles sont du types:
+\begin{verbatim}
+    if(g_resources.exercice==i)
+    {
+        /*!todo Instructions pour l'exercice i*/
+    }
+\end{verbatim}
+Une telle section doit être remplie pour l'exercice \verb|i| en suivant les instructions en commentaire. Certaine sections sont identiques pour plusieurs exercices, et certains exercices peuvent être concernés par plusieurs sections.
+\emph{Respectez bien cette structure !}
+
+Au départ le code est incomplet pour tous les exercices a part l'exercice 0 (qui correspond à la scène de base) et l'exercice 2 (qui consiste a observer la scène sous certains angle). Lorsque vous aurez répondu, vous pourrez naviguer entre les différents exercices en appuyant sur la touche 'e' pour passer a l'exercice suivant, la touche 'E' pour le précédent, ou utiliser le pavé numérique pour passer directement a un exercice donné. 
+
+
+
+\section{Création du volume d'ombre}
+
+Dans toute la suite on s'intéressera à l'ombre portée par le tore sur les autres objets. On veut pour cela créer un volume 3D qui englobe toutes les zones qui sont dans l'ombre du tore.
+
+\subsection{Exercice 1: création des parois latérale}
+
+Pour obtenir les parois latérale du volume d'ombre, il faut d'abord extraire les arêtes du tore qui sont situées sur sa silhouette telle qu'elle est ``vue'' depuis la source de lumière. 
+
+
+
+\begin{itemize}
+\item[{\bf Q1.}] Expliquez en détail ce que représente le volume d'ombre et ce que sont ces parois latérales. Vous illustrerez par des dessins faisant intervenir la source de lumière et le tore.
+\item[{\bf Q2.}] Expliquez comment sont caractérisées les arêtes appartenant à la silhouette.
+\end{itemize}
+
+\subsection{Exercice 2: Volume incomplet}
+Conceptuellement le volume d'ombre est incomplet. En effet, l'intérieur du tore est dans sa propre ombre. Il faut donc ajouter les facettes du tore qui sont à la frontière entre ombre et lumière. Pour que vous puissiez observer ce point, le rendu du tore a été supprimé dans cet exercice. Complétez la fonction \verb|capShadowVolume|, pour ajouter les faces manquantes au volume d'ombre.
+
+\begin{itemize}
+\item[{\bf Q3.}] Comment détecter simplement les ``faces du tore qui sont à la frontière entre ombre et lumière''?
+\end{itemize}
+
+\section{Détermination des zones d'ombres}
+
+Dans cette partie, nous allons utiliser le volume d'ombre pour discriminer via le buffer de stencil, les zones d'ombres des zones éclairées.
+
+\subsection{Exercice 3: Méthode dite de z-pass}
+
+Cette version correspond exactement à l'algorithme décrit dans le document tierce. Implémentez le en suivant les directives.
+
+\begin{itemize}
+\item[{\bf Q4.}] Détaillez les étapes clés de cette stratégie et expliquez leur rôle. Vous appuierez votre argumentation sur une illustration (2D) faisant intervenir, la source de lumière, le shadow caster, un objet tierce et la caméra.
+\item[{\bf Q5.}] Le document tierce, prétend qu'il faut compléter le volume d'ombre comme dans l'exercice 2. Commentez temporairement l'appel à la fonction \verb|capShadowVolume|, puis observez la scène sous différents angles et en changeant l'orientation de la lumière. Observez vous des changements? Expliquez pourquoi cette completion est inutile.
+\item[{\bf Q6.}] Cette première approche présente une faille lorsque la caméra est située dans le volume d'ombre. Placez vous dans cette situation et décrivez le problème (avec screenshot a l'appui).
+\end{itemize}
+ 
+\subsection{Exercice 4: Méthode dite de z-fail}
+Pour pallier au problème précédent, nous allons implanter une approche légèrement modifiée. Dans cette version, nous allons compter les faces du shadow volume non pas devant la scène mais derrière la scène (z-fail). Vous prendrez soin cette fois d'inverser les cas d'incrément (back faces) et de décrément (front faces).
+
+\begin{itemize}
+\item[{\bf Q7.}] Expliquez a l'aide d'une illustration (2D) le fonctionnement de cette approche.
+\item[{\bf Q8.}] Le problème mentionné précédemment a-t-il bien disparu. Pourquoi?
+\item[{\bf Q9.}] Dans cette approche, la complétion du volume d'ombre
+  (par la fonction \verb|capShadowVolume|) est elle nécessaire?
+\item[{\bf Q10.}] Commentez sur la qualité visuelle des ombres générées
+  (aliasing, ...).
+\end{itemize}
+
+\fixme{Q10 is missing maybe it is on the MAC.}
+
+\fixme{I should make them notice the z-fail ``bug'' due to the non-completeness of the shadow volume at the other end, ask them why it is so, and add an exercice to solve it. We could make this a bonus exercice.}
+
+\fixme{Then I could also lead them to notice, the near clip issue that remains in the z-fail (by asking them to get te camera closer and closer to the ground). }
+
+% \begin{figure}
+% \begin{center}
+%   \subfigure[]{\includegraphics[width=0.32\textwidth]{images/ambient}}
+%   \subfigure[\label{subfig:phong}]{\includegraphics[width=0.32\textwidth]{images/blinnPhong}}
+%   \subfigure[]{\includegraphics[width=0.33\textwidth]{images/flat}}
+%   \subfigure[]{\includegraphics[width=0.32\textwidth]{images/gouraud}}
+%   \subfigure[]{\includegraphics[width=0.33\textwidth]{images/lambert}}
+% \end{center}
+% \caption{Un tore représenté selon différents modèles d'illumination et différentes stratégies de shading.}
+% \label{fig:quiz}
+% \end{figure}
+
+
+
+
+\section{Compte-rendu du TP}
+
+Pour ce TP, vous devrez rendre à la fois le code que vous avez produit ainsi qu'un rapport.
+
+\subsection{Code}
+
+Vous fournirez dans une archive appelée \verb|votrenom_tp4_code.tar| tout le contenu de votre dossier de travail (là où vous avez votre code). Vous pourrez utiliser la commande (en supposant que votre dossier de travail s'appelle \verb|tp4/|):
+\begin{verbatim}
+  tar -cf votrenom_tp4_code.tar tp4/ --exclude="build/*" --exclude="*~"
+\end{verbatim}
+Utilisez la directive \verb|--exclude| \emph{à bon escient} pour éliminer tout fichier inutile pour tester votre code. Arrangez vous pour que le test soit le plus simple pour moi, c'est-à-dire, n'ajouter rien d'inutile, mais n'oubliez rien de nécessaire pour compiler/lancer vos exécutables.
+
+\subsection{Rapport}
+
+Pour le rapport, vous le rendrez sous forme d'un fichier pdf (créé avec LaTeX ou tout autre moyen qui vous convient). Je vous recommande fortement d'agrémenter votre rapport avec vos captures d'écran (images et/ou vidéos). Même si il est concevable voire recommandé de travailler en binôme pendant les TPs, le rapport doit lui être individuel. Dans ce rapport devra figurer, les réponses aux questions formulées dans cet énoncé, ainsi que toute remarque concernant votre production et pourquoi pas votre avis sur le TP ou bien sur certains exercices.
+
+ En particulier, je vous demande de faire {\bf en tout début de rapport} un paragraphe général indiquant si certaines parties ne compilent pas ou ne fonctionnent pas comme attendu et si besoin est, comment lancer vos exécutables (s'ils utilisent des arguments par exemple). 
+
+Vous pourrez soit rendre le fichier pdf isolé, soit dans une archive tar contenant des pièces annexes (vidéos, ...). Dans tous les cas, le nom du fichier devra être de la forme \verb|votrenom_tp4_rapport.ext| où \verb|ext| $\in$ \verb|{pdf,tar}|.
+
+\begin{center}
+  {\huge \it  Bon courage!}
+\end{center}
+
+\end{document}
+% vim:sw=2 ft=tex fdl=0 fdm=marker conceallevel=0 spell spelllang=fr:
+

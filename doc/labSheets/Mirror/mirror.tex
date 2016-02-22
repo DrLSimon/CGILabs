@@ -1,0 +1,280 @@
+\documentclass{article}
+\usepackage[linktocpage=true]{hyperref}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc} 
+\usepackage[latin1]{inputenc}
+\usepackage{subfigure}
+\usepackage{color}
+\def\todo#1{}%{{\color{red} #1}}
+\def\fixme#1{{\color{green} #1}}
+
+\author{Loïc Simon}
+\title{TP1: Réflexions par Stencil buffer}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+L'objectif de ce TP est de détailler l'utilisation du stencil buffer. Deux applications sont envisagées:
+\begin{itemize}
+\item la création d'un trou dans un objet
+\item et la création d'un miroir plan et parfait.
+\end{itemize}
+
+Cette séance sera aussi l'occasion de préparer la séance suivante, ou le stencil buffer sera utilisé pour implanter la technique de ``shadow volume'' pour réaliser des ombres portées.
+
+\paragraph{}
+Pour réaliser les exercices suivants, vous devez cloner le répertoire git dédié. Voici la liste de
+commandes à réaliser en début de TP:
+
+
+\begin{verbatim}
+  # lien vers resources tierses 
+  cd
+  ln -s /home/public/simonl/Synthese/local_install .
+  # recuperation du repertoire de travail
+  cd ~/Bureau/ # ou tout autre repertoire de travail
+  git clone http://www.ecole.ensicaen.fr/~simonl/gits/CGILabs.git/
+  cd CGILabs
+  # test compilation et lancement
+  mkdir build
+  cd build
+  cmake ..
+  make  
+  ./Mirror/mirror
+\end{verbatim}
+
+Au cours de l'avancement n'hésitez à pas utiliser git pour sauvegarder votre code. Voici une séquence
+typique de commandes:
+\begin{verbatim}
+  git add mirror.cpp
+  git commit -m"petite avancée sur l'exo 1"
+  ...
+  git commit -a -m"Exo 1= piece of cake"
+  git tag exo1
+  ...
+\end{verbatim}
+
+Dans ce TP vous travaillerez essentiellement sur le  fichier \verb|mirror.cpp| et de façon plus
+accessoire sur le fichier \verb|mirror.f.glsl|. Dans son état original, l'exécutable créé, affiche
+une scène composée d'un singe, une théière, un mur, un plancher et un miroir plan. Il est possible
+de déplacer la caméra avec les flèches du clavier.  Utilisez cette fonctionnalité pour observer la
+scène.
+
+D'autre part, dans le code, des sections sont réservées pour les réponses aux exercices. Elles sont du types:
+\begin{verbatim}
+    if(controls.exercise==i)
+    {
+        /*!todo Instructions pour l'exercice i*/
+    }
+\end{verbatim}
+Une telle section doit être remplie pour l'exercice \verb|i| en suivant les instructions en
+commentaire. Certaines sections sont identiques pour plusieurs exercices, et certains exercices
+peuvent être concernés par plusieurs sections.
+\emph{Respectez bien cette structure !}
+
+Au départ le code est vide pour tous les exercices a part l'exercice 0 (qui correspond à la scène de
+base). Mais lorsque vous aurez répondu, vous pourrez naviguer entre les différents exercices en
+appuyant sur la touche 'e'. Vous pouvez aussi accéder a l'exercice 'i' en utilisant le clavier
+numérique.
+
+
+\section{Utilisation d'un Stencil Buffer}
+
+\subsection{Qu'est ce qu'un stencil buffer}
+Le mot ``stencil'' en anglais signifie pochoir. Un stencil buffer est un buffer disponible en lecture et en écriture, qui permet de réaliser la même fonction qu'un pochoir, à savoir de dessiner uniquement une partie des pixels. Un exemple simpliste d'application de cette idée permet de simuler le rendu d'un objet troué (cf exercice 1).
+
+Ce buffer ressemble au buffer de profondeur (le Z-buffer). C'est une zone mémoire, qui contient une donnée par pixel, appelée la valeur stencil du pixel. Cette donnée est un entier non signé. Nous supposons dans la suite que sa taille est de 8 bits par pixel (cela dépend de la carte graphique).
+
+Rappelons le fonctionnement des tests de profondeur : avec ce mécanisme, la valeur d'un pixel qui
+normalement est une couleur devient un couple (c, d) où c'est une couleur et d un réel correspondant
+à la profondeur du pixel. Chaque pixel a une valeur courante (c, d). La couleur c est stockée dans
+le buffer des couleurs et d se trouve dans le Z-buffer.  Lorsqu'on calcule une nouvelle valeur (c',
+d' ) pour un pixel, on compare d à d' (test de profondeur). Suivant le résultat, soit on remplace la
+valeur courante du pixel par sa nouvelle valeur (c' , d' ), soit on conserve l'ancienne valeur.
+
+En introduisant le stencil, on ajoute aux données du pixel une donnée supplémentaire dite valeur stencil du pixel. La valeur stencil courante d'un pixel se trouve dans le buffer stencil. Il existe aussi un test stencil : il consiste à comparer une valeur stencil à une valeur de référence. Si le test échoue, le buffer de couleur et le Z-buffer resteront inchangés. S'il réussit, ces deux buffers peuvent être l'objet d'une mise à jour, suivant les méthodes habituelles. Dans tous les cas, on peut demander la modification du stencil suivant une méthode prédéfinie, parmi 6 méthodes proposées.
+
+Nous verrons dans ce TP les applications de ce mécanisme. Sans plus tarder, nous allons voir les étapes nécessaires à l'utilisation de ce buffer.
+
+\subsection{Utiliser un stencil buffer: api OpenGL et GLFW3 }
+
+Voici la liste des fonctions utiles pour gérer un buffer de stencil:
+
+\begin{itemize}
+\item Réserver la mémoire nécessaire: 
+\begin{verbatim}
+      glfwWindowHint(GLFW_STENCIL_BITS, 8);
+\end{verbatim}
+\item autoriser/interdire le test de stencil
+\begin{verbatim}
+      glEnable(GL_STENCIL_TEST);
+      glDisable(GL_STENCIL_TEST);
+\end{verbatim}
+\item réinitialiser a une valeur donnée
+\begin{verbatim}
+      glClearStencil( 0x0 );
+      glClear(GL_STENCIL_BUFFER_BIT);
+\end{verbatim}
+\item Choisir la fonction de test
+\begin{verbatim}
+      glStencilFunc(function, ref, mask);
+\end{verbatim}
+Dans cette instruction, \verb|function| peut être choisie parmi les options suivantes:
+\verb|GL_NEVER|, \verb|GL_ALWAYS|, \verb|GL_LESS|,
+\verb|GL_LEQUAL|, \verb|GL_EQUAL|, \verb|GL_GEQUAL|,
+\verb|GL_GREATER|, \verb|GL_NOTEQUAL|. 
+Attention le test est effectué entre \verb|ref| et le valeur de stencil du pixel et non l'inverse (cela a une importance pour les test d'inégalité!). La variable \verb|mask| est un masque binaire permettant de choisir quels bits de la valeur de stencil seront utilisés dans le test. 
+
+\item Choisir les actions a prendre pour mettre a jour la valeur du stencil suivant 3 configurations
+\begin{verbatim}
+      glStencilOp(ifStencilFails, ifStencilPassesButZfails, ifBothPass);  
+\end{verbatim}
+Les trois configurations correspondent au cas où:
+\begin{itemize}
+\item le test de stencil échoue (\verb|ifStencilFails|),
+\item le test de stencil réussi mais le test de profondeur échoue (\verb|ifStencilPassesButZfails|)
+\item les deux tests réussissent (\verb|ifBothPass|)
+\end{itemize}
+Les actions a prendre sont indiquées par le contenu de chacune des variables \verb|ifStencilFails|, \verb|ifStencilPassesButZfails|, \verb|ifBothPass| . Elles peuvent être choisies parmi:
+\verb|GL_KEEP|, \verb|GL_ZERO|, \verb|GL_INCR|, \verb|GL_DECR|,
+\verb|GL_REPLACE|, \verb|GL_INVERT|. L'action \verb|GL_REPLACE|, remplace la valeur courante par celle utilisée dans le test \verb|ref|.
+
+{\em NB:} Les actions définies précédemment constituent l'unique moyen d'écrire dans le buffer de
+stencil. Dans certains cas, on veut écrire dans le stencil, mais l'écriture dans le buffer de
+couleur ne doit pas dépendre de la valeur de stencil. Dans cette situation, il faut quand même
+activer le test de stencil mais utiliser un test trivial (e.g \verb|GL_ALWAYS|).
+
+\item Contrôler quels bits seront mis à jours dans les 3 cas:
+\begin{verbatim}
+   glStencilMask (maskUint)
+\end{verbatim}
+{\em NB:} Cette dernière fonction est à comparer aux fonctions similaire pour les buffers de
+couleurs et de profondeur: 
+\begin{verbatim}
+   glColorMask (redBoolean, greenBoolean, blueBoolean, alphaBoolean)
+   glDepthMask (depthBoolean)
+\end{verbatim}
+Ces dernières fonctions seront utiles pour les exercices.
+
+\end{itemize}
+
+
+\subsection{Exercice 1: Mur troué}
+
+Dans la fonction \verb|draw|, remplissez la section délimitée par \verb|if(controls.exercise==1)|, pour dessiner la même scène que celle de base, mais ou le miroir sert a créer un trou dans le mur. Pour cela vous suivrez les instructions en commentaire en début de la section concernée.
+
+\begin{itemize}
+\item[{\bf Q1.}] Expliquez ce que vous avez fait pour répondre a cet exercice. Votre réponse doit comporter des étapes conceptuelles et les instructions OpenGL permettant d'achever ces étapes. N'hésitez pas a illustrer vos propos avec des dessins.
+\end{itemize}
+
+\section{Création d'un miroir parfait plan}
+
+Dans cette section, vous allez suivre des exercices courts, décrivant les différentes étapes
+nécessaires pour simuler la réflexion de la scène dans un miroir plan. Chaque exercice s'attache a
+une étape atomique de cette technique.
+
+\subsection{Exercice 2: réflexions}
+
+Dans la fonction \verb|drawReflectionOfAllObjects| dessinez la réflexion de tous les objets (autres
+que le miroir) par rapport au plan du miroir (i.e. le plan $y=0$ dans le repère objet du miroir).
+Dans la suite on fera la distinction entre objets {\bf réels} et les objets {\bf virtuels} qui
+correspondent a leur reflets.
+
+
+\begin{itemize}
+\item[{\bf Q2.}] Expliquez comment vous avez réalisé la symétrie requise, du point de vue
+  mathématique et du point de vue des instructions OpenGL associées.
+\end{itemize}
+
+\subsection{Exercice 3: quels objets doivent être reflétés ?}
+
+Le miroir ne reflète que la moitié de l'espace 3D. Donc certains objets ne doivent pas être
+reflétés. Dans la pipeline fixe, un plan de clipping pouvait être introduit via la fonction
+\verb|glClipPlane|. Cette fonctionnalité devenant obsolète dans la pipeline programmable, nous
+allons l'implanter dans le fragment shader via la directive \verb|discard|.
+
+Dans cet exercice, vous devrez à la fois éditer le fichier C++ et le fragment shader
+\verb|mirror.f.glsl|.
+
+\begin{itemize}
+  \item[{\bf Q3.}] Expliquez le rôle d'un plan de clipping en général.
+  \item[{\bf Q4.}] Dans notre cas, où le plan doit-il être  placé pour éliminer les bons objets? Dans quelle orientation?
+  \item[{\bf Q5.}] Expliquez la stratégie qui a été choisie pour définir le plan de clipping, notamment dans quel repère?
+\end{itemize}
+
+
+\subsection{Exercice 4: Éliminer les objets réels dans le champs du miroir}
+
+Le miroir doit masquer les objets réels qui sont derrière lui. Ceci peut se réaliser aisément en dessinant le miroir dans le z-buffer uniquement. Suivez les instructions.
+
+\begin{itemize}
+\item[{\bf Q6.}] Expliquez pourquoi il faut dessiner les objets virtuels avant de dessiner le miroir dans le  z-buffer.
+\end{itemize}
+
+\subsection{Exercice 5: Éliminer les objets virtuels hors du champs du miroir}
+Le miroir a un champs de vue limité. Donc les objets virtuels doivent être découpés pour éliminer
+les parties qui sortent du champs du miroir. Vous réaliserez cette opération en utilisant le stencil
+buffer.
+
+\begin{itemize}
+\item[{\bf Q7.}] Expliquez comment est construit le champs de vue du miroir.
+\item[{\bf Q8.}] Pourquoi ne pas avoir utilisé la même technique (basée sur un test de stencil) dans
+  l'exercice 4 pour décider quelles parties des objets réels doivent être dessinées?
+\end{itemize}
+
+\subsection{Exercice 6: Dernières petites touches}
+
+\begin{itemize}
+\item[{\bf Q9.}] Placez la caméra derrière le mur. Vous devriez observer les reflets du singe au
+    lieu du mur, ce qui est évidemment une anomalie. Ce problème est du au fait que le z-buffer est
+    erroné. Expliquez pourquoi et proposez une correction que vous implanterez.
+\item[{\bf Q10.}] Il reste encore une incohérence dans le dessin des objets virtuels. Saurez vous la
+    repérer?
+\end{itemize}
+
+\subsection{Exercice 7: Utilisation de plans de clipping}
+\begin{itemize}
+\item[{\bf Q11.}] Expliquez une alternative à l'utilisation du stencil buffer, basée sur l'utilisation de plusieurs plans de clipping. Illustrez par des dessins. 
+\end{itemize}
+
+Si vous êtes rapide, {\bf en bonus} vous pouvez implanter cette technique.
+
+\subsection{Exercice 8: Miroirs parallèles}
+\begin{itemize}
+\item[{\bf Q12.}] Proposer une extension de cette suite d'exercice pour gérer des miroirs se reflétant l'un dans l'autre (toujours en utilisant le stencil buffer).
+\end{itemize}
+
+Si vous êtes rapide, {\bf en bonus} vous pouvez implanter cette technique.
+
+
+\section{Compte-rendu du TP}
+
+
+%{\color{red} AUCUN RENDU n'est obligatoire.}
+%%
+%Mais, vous pouvez rendre à la fois le code que vous avez produit ainsi qu'un rapport.
+
+%%%  \subsection{Code}
+%%%  
+%%%  Vous fournirez dans une archive appelée \verb|votrenom_tp1_code.tar| tout le contenu de votre dossier de travail (là où vous avez votre code). Vous pourrez utiliser la commande (en supposant que votre dossier de travail s'appelle \verb|tp1/|):
+%%%  \begin{verbatim}
+%%%    tar -cf votrenom_tp1_code.tar tp1/ --exclude="build/*" --exclude="*~"
+%%%  \end{verbatim}
+%%%  Utilisez la directive \verb|--exclude| \emph{à bon escient} pour éliminer tout fichier inutile pour tester votre code. Arrangez vous pour que le test soit le plus simple pour moi, c'est-à-dire, n'ajouter rien d'inutile, mais n'oubliez rien de nécessaire pour compiler/lancer vos exécutables.
+%%%  
+%%%  \subsection{Rapport}
+%%%  
+%%%  Pour le rapport, vous le rendrez sous forme d'un fichier pdf (créé avec LaTeX ou tout autre moyen qui vous convient). Je vous recommande fortement d'agrémenter votre rapport avec vos captures d'écran (images et/ou vidéos). Même si il est concevable voire recommandé de travailler en binôme pendant les TPs, le rapport doit lui être individuel. Dans ce rapport devra figurer, les réponses aux questions formulées dans cet énoncé, ainsi que toute remarque concernant votre production et pourquoi pas votre avis sur le TP ou bien sur certains exercices.
+%%%  
+%%%   En particulier, je vous demande de faire {\bf en tout début de rapport} un paragraphe général indiquant si certaines parties ne compilent pas ou ne fonctionnent pas comme attendu et si besoin est, comment lancer vos exécutables (s'ils utilisent des arguments par exemple). 
+%%%  
+%%%  Vous pourrez soit rendre le fichier pdf isolé, soit dans une archive tar contenant des pièces annexes (vidéos, ...). Dans tous les cas, le nom du fichier devra être de la forme \verb|votrenom_tp1_rapport.ext| où \verb|ext| $\in$ \verb|{pdf,tar}|.
+%%%  
+\begin{center}
+  {\huge \it  Bon courage!}
+\end{center}
+
+\end{document}
+% vim:sw=2 ft=tex fdl=0 fdm=marker conceallevel=0 spell spelllang=fr:
+
