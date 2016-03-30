@@ -74,6 +74,7 @@ in wireframe. As an exception, in the *Vshadow* lab, the object will be selected
 * https://github.com/nothings/stb/
 * https://github.com/nothings/stb/blob/master/docs/other_libs.md
 * http://prideout.net/blog/?p=11
+
 # Author and License
 Part of this source code has been borrowed and modified from the nice OpenGl Tutorials of [Joe Groff](http://duriansoftware.com/joe/An-intro-to-modern-OpenGL.-Table-of-Contents.html). The corresponding code is in the *utils* directory and was originally published under a "Do whatever you like with this source code" kind of license. 
 
