@@ -75,6 +75,7 @@ in wireframe. As an exception, in the *Vshadow* lab, the object will be selected
   * https://github.com/syoyo/tinyobjloader
   * https://github.com/nothings/stb/blob/master/docs/other_libs.md
   * http://prideout.net/blog/?p=11
+  * https://github.com/elmindreda/Nori (associated to slides: http://www.elmindreda.org/lectures/)
   * http://swarminglogic.com/jotting/2013_10_gamedev01 and https://github.com/swarminglogic/sdl2-gamedev or https://github.com/swarminglogic/sdl2-cross
 
 # Author and License
